@@ -1,83 +1,131 @@
 package controllers
 
 import (
-    "context"
-    "net/http"
-    "prodhub-backend/config"
-    "prodhub-backend/models/mongo"
-    "prodhub-backend/models/postgres"
-    "time"
-
-    "github.com/gin-gonic/gin"
-    "github.com/google/uuid"
-    "go.mongodb.org/mongo-driver/bson"
+	"context"
+	"fmt"
+	"net/http"
+	"prodhub-backend/config"
+	"prodhub-backend/models/mongo"
+	"prodhub-backend/models/postgres"
+    "prodhub-backend/helpers"
+	"time"
+    
+    // "gorm.io/gorm/clause"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson"
+	"gorm.io/gorm"
 )
 
 type RepoInput struct {
-    Name  string `json:"name" binding:"required"`
-    BPM   int    `json:"bpm" binding:"required"`
-    Scale string `json:"scale" binding:"required"`
-    Genre string `json:"genre" binding:"required"`
-	OwnerID string `json:"ownerId" binding:"required"`
+	OwnerID     string `json:"owner_id" binding:"required"`
+	Name        string `json:"name" binding:"required,min=1,max=100"`
+	BPM         int    `json:"bpm" binding:"required,min=20,max=300"`
+	Scale       string `json:"scale" binding:"required"`
+	Genre       string `json:"genre" binding:"required"`
 }
 
 func CreateRepo(c *gin.Context) {
-    ctx := context.Background()
-    var input RepoInput
-    if err := c.ShouldBindJSON(&input); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
+	ctx := context.Background()
+	var input RepoInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-    // userID, exists := c.Get("userID")
-    // if !exists {
-    //     c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthenticated"})
-    //     return
-    // }
+	// Start PostgreSQL transaction
+	tx := config.PostgresDB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
 
-    repoID := uuid.New().String()
-    now := time.Now().Unix()
+	// Check if the user exists
+	var user postgres.User
+	if err := tx.Where("user_id = ?", input.OwnerID).First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			tx.Rollback()
+			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		} else {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		}
+		return
+	}
 
-    repo := mongo.Repo{
-        RepoID:        repoID,
-        OwnerId:       input.OwnerID,
-        Collaborators: []string{},
-        Name:          input.Name,
-        Description: struct {
-            BPM   int    `bson:"bpm"`
-            Scale string `bson:"scale"`
-            Genre string `bson:"genre"`
-        }{
-            BPM:   input.BPM,
-            Scale: input.Scale,
-            Genre: input.Genre,
-        },
-        Activity:  []mongo.Activity{},
-        Versions:  []mongo.Version{},
-        CreatedAt: now,
-        UpdatedAt: now,
-    }
+	// Generate a numeric RepoID
+	repoID, err := helpers.GetNextID(ctx, config.CounterCollection, "repoId")
+	if err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate RepoID"})
+		return
+	}
 
-    if _, err := config.RepoCollection.InsertOne(ctx, repo); err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create repo"})
-        return
-    }
+	now := time.Now().Unix()
 
-    var user postgres.User
-    if err := config.PostgresDB.First(&user, "id = ?", input.OwnerID).Error; err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user data"})
-        return
-    }
+	repo := mongo.Repo{
+		RepoID:        fmt.Sprintf("%d", repoID), // Use numeric RepoID as string
+		OwnerId:       input.OwnerID,
+		Collaborators: []string{},
+		Name:          input.Name,
+		Description: struct {
+			BPM   int    `bson:"bpm"`
+			Scale string `bson:"scale"`
+			Genre string `bson:"genre"`
+		}{
+			BPM:   input.BPM,
+			Scale: input.Scale,
+			Genre: input.Genre,
+		},
+		Activity: []mongo.Activity{
+			{
+				Date:        now,
+				Description: "Repository created",
+			},
+		},
+		Versions:  []mongo.Version{},
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
 
-    user.RepoIDs = append(user.RepoIDs, repoID)
+	// Insert repo into MongoDB
+	_, err = config.RepoCollection.InsertOne(ctx, repo)
+	if err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create repo in MongoDB"})
+		return
+	}
 
-    if err := config.PostgresDB.Save(&user).Error; err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user data"})
-        return
-    }
+	// Update user's RepoIDs
+	user.RepoIDs = append(user.RepoIDs, fmt.Sprintf("%d", repoID))
+	if err := tx.Save(&user).Error; err != nil {
+		// _, deleteErr := config.RepoCollection.DeleteOne(ctx, bson.M{"repoId": repoID})
+		// if deleteErr != nil {
+		// 	fmt.Printf("Failed to delete repo from MongoDB after PostgreSQL update failure: %v\n", deleteErr)
+		// }
+		// tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user data"})
+		return
+	}
 
-    c.JSON(http.StatusCreated, repo)
+	// Commit the PostgreSQL transaction
+	if err := tx.Commit().Error; err != nil {
+		// _, deleteErr := config.RepoCollection.DeleteOne(ctx, bson.M{"repoId": repoID})
+		// if deleteErr != nil {
+		// 	fmt.Printf("Failed to delete repo from MongoDB after PostgreSQL commit failure: %v\n", deleteErr)
+		// }
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to commit transaction"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Repository created successfully",
+		"repo":    repo,
+	})
 }
+
+
 
 func AddVersion(c *gin.Context) {
     ctx := context.Background()
@@ -93,7 +141,7 @@ func AddVersion(c *gin.Context) {
 
     filter := bson.M{"repoId": repoID}
     update := bson.M{"$push": bson.M{"versions": version}}
-
+    
     if _, err := config.RepoCollection.UpdateOne(ctx, filter, update); err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add version"})
         return

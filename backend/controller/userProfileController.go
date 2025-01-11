@@ -4,23 +4,30 @@ import (
     "context"
     "net/http"
     "time"
+    "fmt"
+    "log"
 
     "github.com/gin-gonic/gin"
     "go.mongodb.org/mongo-driver/bson"
     "prodhub-backend/config"
     "prodhub-backend/models/mongo"
     "prodhub-backend/models/postgres"
+    "github.com/google/uuid"
 )
 
 // GetUser retrieves a user by ID
 func GetUser(c *gin.Context) {
     userID := c.Param("id")
+    log.Printf("Searching for user with ID: %s", userID)
 
     var user postgres.User
     if err := config.PostgresDB.First(&user, "user_id = ?", userID).Error; err != nil {
+        log.Printf("Error finding user: %v", err)
         c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
         return
     }
+    
+    log.Printf("Found user: %+v", user)
     user.Password = ""
     c.JSON(http.StatusOK, user)
 }
@@ -28,12 +35,12 @@ func GetUser(c *gin.Context) {
 // UpdateUser updates a user's details
 func UpdateUser(c *gin.Context) {
     userID := c.Param("id")
-    currentUserID, _ := c.Get("userID")
+    // currentUserID, _ := c.Get("userID")
 
-    if userID != currentUserID {
-        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-        return
-    }
+    // if userID != currentUserID {
+    //     c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+    //     return
+    // }
 
     var user postgres.User
     if err := config.PostgresDB.First(&user, "user_id = ?", userID).Error; err != nil {
@@ -77,11 +84,13 @@ func GetUserRepos(c *gin.Context) {
         c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
         return
     }
+    fmt.Println(user.RepoIDs)
 
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
-
+    
     var repos []mongo.Repo
+
     cursor, err := config.MongoDB.Database("prodhub").Collection("repos").Find(ctx, bson.M{"repoId": bson.M{"$in": user.RepoIDs}})
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get repos"})
@@ -176,14 +185,18 @@ func CreateUser(c *gin.Context) {
         return
     }
 
+    // Generate a unique user_id
+    userID := uuid.New().String()
+
     newUser := postgres.User{
-        Email:      input.Email,
-        Username:   input.Username,
-        Password:   input.Password, // You should hash the password before saving it in production
-        RepoIDs:    []string{},
+        UserID:    userID, // Store the generated user_id
+        Email:     input.Email,
+        Username:  input.Username,
+        Password:  input.Password, // You should hash the password before saving it in production
+        RepoIDs:   []string{},
         LikedRepos: []string{},
-        CreatedAt:  time.Now().Unix(),
-        UpdateAt:   time.Now().Unix(),
+        CreatedAt: time.Now().Unix(),
+        UpdateAt:  time.Now().Unix(),
     }
 
     if err := config.PostgresDB.Create(&newUser).Error; err != nil {
@@ -191,6 +204,6 @@ func CreateUser(c *gin.Context) {
         return
     }
 
-    newUser.Password = ""
+    newUser.Password = "" // Don't return the password
     c.JSON(http.StatusCreated, newUser)
 }
