@@ -100,21 +100,21 @@ func CreateRepo(c *gin.Context) {
 	// Update user's RepoIDs
 	user.RepoIDs = append(user.RepoIDs, fmt.Sprintf("%d", repoID))
 	if err := tx.Save(&user).Error; err != nil {
-		// _, deleteErr := config.RepoCollection.DeleteOne(ctx, bson.M{"repoId": repoID})
-		// if deleteErr != nil {
-		// 	fmt.Printf("Failed to delete repo from MongoDB after PostgreSQL update failure: %v\n", deleteErr)
-		// }
-		// tx.Rollback()
+		_, deleteErr := config.RepoCollection.DeleteOne(ctx, bson.M{"repoId": repoID})
+		if deleteErr != nil {
+			fmt.Printf("Failed to delete repo from MongoDB after PostgreSQL update failure: %v\n", deleteErr)
+		}
+		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user data"})
 		return
 	}
 
 	// Commit the PostgreSQL transaction
 	if err := tx.Commit().Error; err != nil {
-		// _, deleteErr := config.RepoCollection.DeleteOne(ctx, bson.M{"repoId": repoID})
-		// if deleteErr != nil {
-		// 	fmt.Printf("Failed to delete repo from MongoDB after PostgreSQL commit failure: %v\n", deleteErr)
-		// }
+		_, deleteErr := config.RepoCollection.DeleteOne(ctx, bson.M{"repoId": repoID})
+		if deleteErr != nil {
+			fmt.Printf("Failed to delete repo from MongoDB after PostgreSQL commit failure: %v\n", deleteErr)
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to commit transaction"})
 		return
 	}
