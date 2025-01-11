@@ -37,6 +37,7 @@ func ConnectPostgres(){
     }
     log.Println("Database migrations completed successfully")
 }
-func runMigrations() error{
-    return PostgresDB.AutoMigrate(&pgModels.User{})
+func runMigrations() error {
+    // Enable detailed logging for migrations
+    return PostgresDB.Debug().AutoMigrate(&pgModels.User{})
 }
