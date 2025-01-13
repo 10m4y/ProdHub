@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"time"
-    "fmt"
 
 	"prodhub-backend/config"
 	"prodhub-backend/models/mongo"
@@ -13,9 +13,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"golang.org/x/crypto/bcrypt"
-	"github.com/joho/godotenv"
 	// "log"
 )
 
