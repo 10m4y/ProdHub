@@ -2,24 +2,29 @@ package routes
 
 import (
 	controllers "prodhub-backend/controller"
+	"prodhub-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
 func RepoRoutes(router *gin.Engine) {
 	repo := router.Group("/repo")
+	repo.Use(middleware.Authentication())
+
 	{
 		// Repository Routes
-		repo.POST("/create", controllers.CreateRepo) // Create a new repository
-		repo.GET("/:id", controllers.GetRepo)        // Get repository details
-		repo.PUT("/:id", controllers.UpdateRepo)     // Update repository details
-		repo.DELETE("/:id", controllers.DeleteRepo)  // Delete a repository
+		repo.POST("/create", controllers.CreateRepo)
+		repo.GET("/:id", controllers.GetRepo)
+		repo.PUT("/:id", controllers.UpdateRepo)
+		repo.DELETE("/:id", controllers.DeleteRepo)
 
 		// Branch Routes
-		repo.POST("/:id/branch/create", controllers.CreateBranch)            // Create a new branch
-		repo.PUT("/:id/branch/switch/:branchName", controllers.SwitchBranch) // Switch to a different branch
-		repo.GET("/:id/branch/:branchName", controllers.GetBranch)           // Get details of a specific branch
-		repo.GET("/:id/branches", controllers.GetBranch)                     // Get all branches
-		repo.DELETE("/:id/branch/:branchName", controllers.DeleteBranch)     // Delete a specific branch
+		repo.POST("/:id/branch", controllers.CreateBranch)
+		repo.GET("/:id/branch/:branchName", controllers.GetBranch)
+		repo.DELETE("/:id/branch/:branchName", controllers.DeleteBranch)
+
+		// Version Routes
+		repo.POST("/:id/branch/:branchName/version", controllers.AddVersion)
+
 	}
 }

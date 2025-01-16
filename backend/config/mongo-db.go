@@ -14,6 +14,7 @@ import (
 
 var MongoDB *mongo.Client
 var RepoCollection *mongo.Collection
+var CounterCollection *mongo.Collection
 
 func ConnectMongo()error{
 
@@ -36,6 +37,9 @@ func ConnectMongo()error{
 
 	MongoDB=client
 	RepoCollection = client.Database("prodhub").Collection("repos")
+	database:=client.Database("prodhub")
+
+	CounterCollection = database.Collection("counters")
 	log.Println("Connected to MongoDB")
 	return nil
 }

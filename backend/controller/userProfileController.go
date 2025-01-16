@@ -13,10 +13,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"golang.org/x/crypto/bcrypt"
-	// "log"
 )
 
 // Load JWT secret from environment variables and ensure it's set
@@ -108,7 +108,7 @@ func GetUserRepos(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get repos"})
 		return
 	}
-	defer cursor.Close(ctx) // Ensure cursor is closed
+	defer cursor.Close(ctx)
 	if err := cursor.All(ctx, &repos); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode repos"})
 		return
@@ -166,7 +166,7 @@ func UnlikeRepo(c *gin.Context) {
 	for i, id := range user.LikedRepos {
 		if id == repoID {
 			user.LikedRepos = append(user.LikedRepos[:i], user.LikedRepos[i+1:]...)
-			user.UpdateAt = time.Now().Unix() // Update the user's update time
+			user.UpdateAt = time.Now().Unix()
 
 			if err := config.PostgresDB.Save(&user).Error; err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to unlike repo"})
@@ -205,10 +205,12 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
+	userID := uuid.New().String()
 	newUser := postgres.User{
+		UserID:     userID,
 		Email:      input.Email,
 		Username:   input.Username,
-		Password:   string(hashedPassword), // Store the hashed password here
+		Password:   string(hashedPassword),
 		RepoIDs:    []string{},
 		LikedRepos: []string{},
 		CreatedAt:  time.Now().Unix(),
@@ -220,12 +222,12 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully"})
+	newUser.Password = "" // Don't return the password in the response
+	c.JSON(http.StatusCreated, newUser)
 }
 
 // Login handles user authentication
 func Login(c *gin.Context) {
-	// Ensure environment variables are loaded
 	if err := loadEnv(); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error loading environment variables"})
 		return
@@ -241,24 +243,22 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Find the user by email
 	var user postgres.User
 	if err := config.PostgresDB.Where("email = ?", input.Email).First(&user).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}
 
-	// Compare the password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}
 
-	// Generate JWT token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userID": user.UserID,
-		"exp":    time.Now().Add(time.Hour * 24).Unix(), // Token expires in 24 hours
+		"exp":    time.Now().Add(time.Hour * 24).Unix(),
 	})
+	
 	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
