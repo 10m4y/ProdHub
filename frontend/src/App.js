@@ -1,25 +1,33 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import CreateRepo from './components/repo/createRepo'
+import RepoDetails from './components/repo/repoDetails';
+import RepoHistory from './components/repo/repoHistory';
+import UploadVersion from './components/repo/uploadVersion';
+import RepoList from './components/repo/repoList';
+import CreateUser from './components/user/createUser';
+import GetUser from './components/user/getUser';
+import UpdateUser from './components/user/updateUser';
+import GetUserRepos from './components/user/getUserRepos';
 
-function App() {
+const App = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<RepoList/>} />
+        <Route path="/create" element={<CreateRepo />} />
+        <Route path="/repo/:id" element={<RepoDetails />}/>
+        <Route path="/repo/:id/history" element={<RepoHistory />}/>
+        <Route path="/repo/:id/upload" element={<UploadVersion />}/>
+        
+        <Route path='/signup' element={<CreateUser/>}/>
+        <Route path='/user/:id' element={<GetUser/>}/>
+        <Route path='/user/update/:id' element={<UpdateUser/>}/>
+        <Route path='/user/repos/:id' element={<GetUserRepos/>}/>
+        
+      </Routes>
+    </Router>
   );
-}
+};
 
 export default App;

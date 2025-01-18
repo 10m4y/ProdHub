@@ -24,11 +24,15 @@ func main(){
 
 	// CONFIGURE CORS
     router.Use(cors.New(cors.Config{
-        AllowOrigins:     []string{"*"},
+        AllowOrigins:     []string{"http://localhost:3000"},
         AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
         AllowHeaders:     []string{"Origin", "Content-Type", "Accept"},
         AllowCredentials: true,
     }))
+
+	//CONNECTING FIREBASE
+	log.Println("Connecting to firebase")
+	config.InitFirebase()
 
 	// CONNECTING MONGODB
 	log.Println("Connecting to mongodb")

@@ -12,6 +12,6 @@ func UserRoutes(router *gin.Engine){
 		user.GET("/:id",controllers.GetUser)
 		user.PUT("/:id",controllers.UpdateUser)
 		user.GET("/:id/repos",controllers.GetUserRepos)
-		user.POST("create",controllers.CreateUser)
+		user.POST("/signup",controllers.CreateUser)
 	}
-}
+}	

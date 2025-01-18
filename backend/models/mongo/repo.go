@@ -26,4 +26,5 @@ type Repo struct{
 	Versions []Version `bson:"versions"`
 	CreatedAt int64 `bson:"createdAt"`
 	UpdatedAt  int64 `bson:"updateAt"`
+	Public     bool  `bson:"public"`
 }
