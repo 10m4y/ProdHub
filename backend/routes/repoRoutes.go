@@ -13,6 +13,7 @@ func RepoRoutes(router *gin.Engine) {
 
 	{
 		// Repository Routes
+		repo.GET("/", controllers.GetAllPublicRepos)
 		repo.POST("/create", controllers.CreateRepo)
 		repo.GET("/:id", controllers.GetRepo)
 		repo.PUT("/:id", controllers.UpdateRepo)
