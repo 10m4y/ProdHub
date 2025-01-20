@@ -36,4 +36,5 @@ type Repo struct {
 	Branches  []Branch   `bson:"branches"` // List of branches
 	CreatedAt int64      `bson:"createdAt"`
 	UpdatedAt int64      `bson:"updatedAt"`
+	Public     bool      `bson:"public"`
 }
