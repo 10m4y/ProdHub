@@ -1,22 +1,31 @@
 package routes
 
-import(
+import (
+	controllers "prodhub-backend/controller"
+	"prodhub-backend/middleware"
 
 	"github.com/gin-gonic/gin"
-
-	"prodhub-backend/controller"
 )
 
-func RepoRoutes(router *gin.Engine){
+func RepoRoutes(router *gin.Engine) {
 	repo := router.Group("/repo")
+	repo.Use(middleware.Authentication())
+
 	{
-		repo.GET("/",controllers.GetAllPublicRepos)
-		repo.POST("/create",controllers.CreateRepo)
-		repo.GET("/:id",controllers.GetRepo)
-		// UPDATE REPO FUNCTION NEED TO BE IMPLEMENTED
-		// repo.PUT("/:id",controllers.UpdateRepo) 
-		repo.DELETE("/:id",controllers.DeleteRepo)
-		repo.POST("/upload/:id",controllers.AddVersion)
-		repo.GET("history/:id",controllers.GetRepoVersions)
+		// Repository Routes
+		repo.GET("/", controllers.GetAllPublicRepos)
+		repo.POST("/create", controllers.CreateRepo)
+		repo.GET("/:id", controllers.GetRepo)
+		repo.PUT("/:id", controllers.UpdateRepo)
+		repo.DELETE("/:id", controllers.DeleteRepo)
+
+		// Branch Routes
+		repo.POST("/:id/branch", controllers.CreateBranch)
+		repo.GET("/:id/branch/:branchName", controllers.GetBranch)
+		repo.DELETE("/:id/branch/:branchName", controllers.DeleteBranch)
+
+		// Version Routes
+		repo.POST("/:id/branch/:branchName/version", controllers.AddVersion)
+
 	}
 }
