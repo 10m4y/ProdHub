@@ -12,6 +12,9 @@ import (
 	"log"
     
     // "gorm.io/gorm/clause"
+	"log"
+    
+    // "gorm.io/gorm/clause"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
@@ -21,6 +24,11 @@ import (
 
 // Structs for Inputs
 type RepoInput struct {
+	// OwnerID     string `json:"owner_id" binding:"required"`
+	Name        string `json:"name" binding:"required,min=1,max=100"`
+	BPM         int    `json:"bpm" binding:"required,min=20,max=300"`
+	Scale       string `json:"scale" binding:"required"`
+	Genre       string `json:"genre" binding:"required"`
 	// OwnerID     string `json:"owner_id" binding:"required"`
 	Name        string `json:"name" binding:"required,min=1,max=100"`
 	BPM         int    `json:"bpm" binding:"required,min=20,max=300"`
@@ -67,6 +75,15 @@ func CreateRepo(c *gin.Context) {
 	}
 
 	// Bind JSON input (exclude OwnerID from input struct)
+
+	// Extract user_id from the context
+	userID, exists := c.Get("userId")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	// Bind JSON input (exclude OwnerID from input struct)
 	if err := c.ShouldBindJSON(&input); err != nil {
 		sendErrorResponse(c, http.StatusBadRequest, ErrInvalidInput)
 		return
@@ -82,6 +99,10 @@ func CreateRepo(c *gin.Context) {
 
 	// Check if user exists
 	var user postgres.User
+	if err := tx.Where("user_id = ?", userID).First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			tx.Rollback()
+			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 	if err := tx.Where("user_id = ?", userID).First(&user).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			tx.Rollback()
@@ -104,6 +125,8 @@ func CreateRepo(c *gin.Context) {
 	repoIDStr := fmt.Sprintf("%d", repoID)
 
 	repo := mongo.Repo{
+		RepoID:        repoIDStr, // Use numeric RepoID as string
+		OwnerId:       userID.(string),          // Automatically set OwnerID from context
 		RepoID:        repoIDStr, // Use numeric RepoID as string
 		OwnerId:       userID.(string),          // Automatically set OwnerID from context
 		Collaborators: []string{},
@@ -209,14 +232,32 @@ func UpdateRepo(c *gin.Context) {
 }
 
 
+
 func AddVersion(c *gin.Context) {
+	repoId := c.Param("repoId")
 	repoId := c.Param("repoId")
 
 	file,header,err := c.Request.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "File not found"})
+	file,header,err := c.Request.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "File not found"})
 		return
 	}
+	defer file.Close()
+
+	//UPLOAD FILE TO FIREBASE STORAGE
+	bucketName := "prodhub-a4d9c.appspot.com"
+	fileURL, err := UploadFile(file, header.Filename, bucketName)
+if err != nil {
+    log.Printf("Upload failed: %v", err)
+    c.JSON(http.StatusInternalServerError, gin.H{
+        "error": "Failed to upload file",
+        "details": err.Error(),
+    })
+    return
+}
 	defer file.Close()
 
 	//UPLOAD FILE TO FIREBASE STORAGE
@@ -266,10 +307,52 @@ func AddActivity(c *gin.Context) {
         return
     }
     activity.Date = time.Now().Unix()
+	//Create version metadata
+	version := mongo.Version{
+		VersionID: uuid.New().String(),
+		URL:	   fileURL,
+		Changes:  c.PostForm("changes"),
+		CreatedAt: time.Now().Unix(),
+	}
+
+	ctx,cancel :=context.WithTimeout(context.Background(),10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"repoId": repoId}
+	update := bson.M{"$push": bson.M{"versions": version}}
+
+	_,err= config.RepoCollection.UpdateOne(ctx,filter,update)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add version"})
+		return
+	}
+
+	c.JSON(http.StatusOK,version)
+
+
+}
+// NOT MENTIONED IN THE ROUTES FILE
+func AddActivity(c *gin.Context) {
+    ctx := context.Background()
+    repoID := c.Param("id")
+
+    var activity mongo.Activity
+    if err := c.ShouldBindJSON(&activity); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    activity.Date = time.Now().Unix()
 
     filter := bson.M{"repoId": repoID}
     update := bson.M{"$push": bson.M{"activity": activity}}
+    filter := bson.M{"repoId": repoID}
+    update := bson.M{"$push": bson.M{"activity": activity}}
 
+    if _, err := config.RepoCollection.UpdateOne(ctx, filter, update); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add activity"})
+        return
+    }
+    c.JSON(http.StatusOK, activity)
     if _, err := config.RepoCollection.UpdateOne(ctx, filter, update); err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add activity"})
         return
@@ -283,7 +366,22 @@ func GetRepo(c *gin.Context) {
     repoID := c.Param("id")
 	// I AM FETCHING USER_ID FROM THE CONTEXT
 	// userID, _ := c.Get("userID")
+    ctx := context.Background()
+    repoID := c.Param("id")
+	// I AM FETCHING USER_ID FROM THE CONTEXT
+	// userID, _ := c.Get("userID")
 
+    var repo mongo.Repo
+    if err := config.RepoCollection.FindOne(ctx, bson.M{"repoId": repoID}).Decode(&repo); err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Repo not found"})
+        return
+    }
+
+	// THIS IS FOR SAFETY SO USERS CAN'T ACCESS PRIVATE REPOS
+	// if !repo.Public && repo.OwnerId != userID || !(helpers.Contains(repo.Collaborators,userID.(string))) {
+	// 	c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+	// }
+    c.JSON(http.StatusOK, repo)
     var repo mongo.Repo
     if err := config.RepoCollection.FindOne(ctx, bson.M{"repoId": repoID}).Decode(&repo); err != nil {
         c.JSON(http.StatusNotFound, gin.H{"error": "Repo not found"})
@@ -302,6 +400,15 @@ func DeleteRepo(c *gin.Context) {
 	ctx := context.Background()
 	repoID := c.Param("id")
 
+    var repo mongo.Repo
+    if err := config.RepoCollection.FindOne(ctx, bson.M{"repoId": repoID}).Decode(&repo); err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Repo not found"})
+        return
+    }
+	// if repo.OwnerId != userID {
+	// 	c.JSON(http.StatusForbidden, gin.H{"error": "Only the owner can delete this repo"})
+	// 	return
+	// }
     var repo mongo.Repo
     if err := config.RepoCollection.FindOne(ctx, bson.M{"repoId": repoID}).Decode(&repo); err != nil {
         c.JSON(http.StatusNotFound, gin.H{"error": "Repo not found"})
@@ -344,6 +451,48 @@ func DeleteRepo(c *gin.Context) {
 }
 
 
+func GetRepoVersions(c *gin.Context) {
+    repoID := c.Param("repoId")
+	userID, _ := c.Get("userID")
+
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+
+    var repo mongo.Repo
+    if err := config.RepoCollection.FindOne(ctx, bson.M{"repoId": repoID}).Decode(&repo); err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Repo not found"})
+        return
+    }
+	if !repo.Public && repo.OwnerId != userID && !(helpers.Contains(repo.Collaborators, userID.(string))) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		return
+	}
+
+    c.JSON(http.StatusOK, repo.Versions)
+}
+
+func GetAllPublicRepos(c *gin.Context){
+
+	ctx,cancel := context.WithTimeout(context.Background(),10*time.Second)
+	defer cancel()
+
+	filter :=bson.M{"public" : true}
+	cursor,err := config.RepoCollection.Find(ctx,filter)
+	if err!=nil{
+		c.JSON(http.StatusInternalServerError,gin.H{"error":"Failed to fetch repos"})
+		return
+	}
+	defer cursor.Close(ctx)
+
+	var repos []mongo.Repo
+	if err := cursor.All(ctx,&repos); err != nil {
+		c.JSON(http.StatusInternalServerError,gin.H{"error":"Failed to decode repos"})
+		return
+	}
+
+	c.JSON(http.StatusOK,repos)
+}
+// NOT MENTIONED IN THE ROUTES FILE
 func GetRepoVersions(c *gin.Context) {
     repoID := c.Param("repoId")
 	userID, _ := c.Get("userID")
