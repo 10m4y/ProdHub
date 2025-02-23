@@ -10,11 +10,15 @@ import Login from './components/user/loginUser';
 import GetUser from './components/user/getUser';
 import UpdateUser from './components/user/updateUser';
 import GetUserRepos from './components/user/getUserRepos';
+// import Navigation from './components/navBar';
 
 const App = () => {
   return (
+
+  
     <Router>
       <Routes>
+        
         <Route path="/" element={<RepoList/>} />
         <Route path="/create" element={<CreateRepo />} />
         <Route path="/repo/:id" element={<RepoDetails />}/>
@@ -28,6 +32,7 @@ const App = () => {
         
       </Routes>
     </Router>
+    
   );
 };
 
