@@ -3,15 +3,14 @@
 import { useState } from "react"
 import { Headphones, Mail, Lock, User } from "lucide-react"
 import styled, { keyframes } from "styled-components"
-import {signUp} from '../../api/user'
+import {login} from '../../api/user'
 import { useNavigate } from "react-router-dom"
 
 
-const SignUp = () => {
+const Login= () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    username: "",
   })
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
@@ -24,16 +23,25 @@ const SignUp = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      await signUp(formData)
-      setMessage("Welcome to ProHub! Your account has been created.")
+      const response=await login(formData);
+      const receivedToken = response.data.token;
+      console.log("Received token: ", receivedToken);
+      setMessage("Welcome back to ProHub!")
     
       setError("")
+      if (receivedToken) {
+        localStorage.setItem('token', receivedToken); // Save token for future requests
+        alert('Login successful!');
+        navigate('/'); // Redirect to dashboard after login
+      } else {
+        alert('Login failed! No token received.');
+      }
 
       setTimeout(()=>{
-        navigate("/login")
+        navigate("/")
       },1000)
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to create account. Please try again.")
+      setError(err.response?.data?.error || "Failed to Login. Please try again.")
     }
   }
 
@@ -43,7 +51,7 @@ const SignUp = () => {
         <LogoContainer>
           <Logo />
         </LogoContainer>
-        <Title>Join ProHub</Title>
+        <Title>Login to ProHub</Title>
         <Form onSubmit={handleSubmit}>
           <InputGroup>
             <InputIcon>
@@ -71,20 +79,7 @@ const SignUp = () => {
               required
             />
           </InputGroup>
-          <InputGroup>
-            <InputIcon>
-              <User size={16} />
-            </InputIcon>
-            <Input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              placeholder="Username"
-              required
-            />
-          </InputGroup>
-          <Button type="submit">Create Account</Button>
+          <Button type="submit">Login</Button>
         </Form>
         {message && <Message>{message}</Message>}
         {error && <Message isError>{error}</Message>}
@@ -93,7 +88,7 @@ const SignUp = () => {
   )
 }
 
-export default SignUp
+export default Login
 
 const fadeIn = keyframes`
   from { opacity: 0; }

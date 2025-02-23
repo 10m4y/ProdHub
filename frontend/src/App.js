@@ -6,6 +6,7 @@ import RepoHistory from './components/repo/repoHistory';
 import UploadVersion from './components/repo/uploadVersion';
 import RepoList from './components/repo/repoList';
 import CreateUser from './components/user/createUser';
+import Login from './components/user/loginUser';
 import GetUser from './components/user/getUser';
 import UpdateUser from './components/user/updateUser';
 import GetUserRepos from './components/user/getUserRepos';
@@ -19,7 +20,7 @@ const App = () => {
         <Route path="/repo/:id" element={<RepoDetails />}/>
         <Route path="/repo/:id/history" element={<RepoHistory />}/>
         <Route path="/repo/:id/upload" element={<UploadVersion />}/>
-        
+        <Route path='/signin' element={<Login/>}/>
         <Route path='/signup' element={<CreateUser/>}/>
         <Route path='/user/:id' element={<GetUser/>}/>
         <Route path='/user/update/:id' element={<UpdateUser/>}/>

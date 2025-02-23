@@ -177,6 +177,7 @@ func UpdateRepo(c *gin.Context) {
 		sendErrorResponse(c, http.StatusBadRequest, ErrInvalidInput)
 		return
 	}
+	
 
 	// Check if repo exists
 	var repo mongo.Repo
