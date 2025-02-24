@@ -4,8 +4,13 @@ const API = axios.create({ baseURL: 'http://localhost:8080/repo' });
 
 API.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    const userId=user.user_id;
     if(token){
         config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (userId) {
+        config.headers["x-user-id"] = userId;  // Custom header to send userId
     }
     return config;
 },(error)=>{
