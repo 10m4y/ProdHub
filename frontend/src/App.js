@@ -19,7 +19,7 @@ const App = () => {
     <Router>
       <Routes>
         
-        <Route path="/" element={<RepoList/>} />
+        <Route path="/" element={<RepoList/>} /> 
         <Route path="/create" element={<CreateRepo />} />
         <Route path="/repo/:id" element={<RepoDetails />}/>
         <Route path="/repo/:id/history" element={<RepoHistory />}/>

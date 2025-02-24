@@ -145,7 +145,7 @@ const Navigation = () => {
             Settings
           </NavLink>
 
-          <CreateButton to="/new">
+          <CreateButton to="/create">
             <FolderPlus size={18} />
             New Project
           </CreateButton>

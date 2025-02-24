@@ -24,6 +24,7 @@ const Login= () => {
     e.preventDefault()
     try {
       const response=await login(formData);
+      console.log("Response: ", response);
       const receivedToken = response.data.token;
       console.log("Received token: ", receivedToken);
       setMessage("Welcome back to ProHub!")
@@ -31,6 +32,7 @@ const Login= () => {
       setError("")
       if (receivedToken) {
         localStorage.setItem('token', receivedToken); // Save token for future requests
+        localStorage.setItem('user', JSON.stringify(response.data.user)); // Save user details
         alert('Login successful!');
         navigate('/'); // Redirect to dashboard after login
       } else {
