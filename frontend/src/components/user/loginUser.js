@@ -1,13 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { Headphones, Mail, Lock, User } from "lucide-react"
+import { Headphones, Mail, Lock } from "lucide-react"
 import styled, { keyframes } from "styled-components"
-import {login} from '../../api/user'
+import { login } from "../../api/user"
 import { useNavigate } from "react-router-dom"
 
-
-const Login= () => {
+const Login = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -15,6 +14,7 @@ const Login= () => {
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
   const navigate = useNavigate()
+
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
@@ -23,25 +23,25 @@ const Login= () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      const response=await login(formData);
-      console.log("Response: ", response);
-      const receivedToken = response.data.token;
-      console.log("Received token: ", receivedToken);
+      const response = await login(formData)
+      console.log("Response: ", response)
+      const receivedToken = response.data.token
+      console.log("Received token: ", receivedToken)
       setMessage("Welcome back to ProHub!")
-    
+
       setError("")
       if (receivedToken) {
-        localStorage.setItem('token', receivedToken); // Save token for future requests
-        localStorage.setItem('user', JSON.stringify(response.data.user)); // Save user details
-        alert('Login successful!');
-        navigate('/'); // Redirect to dashboard after login
+        localStorage.setItem("token", receivedToken)
+        localStorage.setItem("user", JSON.stringify(response.data.user))
+        alert("Login successful!")
+        navigate("/")
       } else {
-        alert('Login failed! No token received.');
+        alert("Login failed! No token received.")
       }
 
-      setTimeout(()=>{
+      setTimeout(() => {
         navigate("/")
-      },1000)
+      }, 1000)
     } catch (err) {
       setError(err.response?.data?.error || "Failed to Login. Please try again.")
     }
@@ -92,47 +92,58 @@ const Login= () => {
 
 export default Login
 
+// Animations
 const fadeIn = keyframes`
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 `
 
+// Fullscreen Background Container
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-  color: #ffffff;
+  background-image: url("/image2.jpg") ;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color:rgb(0, 0, 0);
   font-family: 'Inter', sans-serif;
   box-sizing: border-box;
+  padding: 20px;
 `
 
+// Glassmorphic Form Container with Border Box
 const FormContainer = styled.div`
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 20px;
   padding: 2rem;
   width: 90%;
-  max-width: 360px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  max-width: 380px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   animation: ${fadeIn} 0.5s ease-out;
 `
 
+// Login Title
 const Title = styled.h2`
   font-size: 2rem;
   margin-bottom: 1.25rem;
   text-align: center;
-  color: #f0f0f0;
+  color:rgb(4, 1, 1);
 `
 
+// Form
 const Form = styled.form`
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 `
 
+// Input Group with Icons
 const InputGroup = styled.div`
   position: relative;
   width: 100%;
@@ -141,10 +152,10 @@ const InputGroup = styled.div`
 const Input = styled.input`
   width: 100%;
   padding: 0.6rem 1rem 0.6rem 2.25rem;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
-  color: #ffffff;
+  color:rgb(13, 4, 4);
   font-size: 0.9rem;
   transition: all 0.3s ease;
   box-sizing: border-box;
@@ -152,11 +163,11 @@ const Input = styled.input`
   &:focus {
     outline: none;
     border-color: #6a5acd;
-    box-shadow: 0 0 0 2px rgba(106, 90, 205, 0.2);
+    box-shadow: 0 0 8px rgba(106, 90, 205, 0.5);
   }
 
   &::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(7, 6, 6, 0.6);
   }
 `
 
@@ -165,19 +176,21 @@ const InputIcon = styled.span`
   left: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(18, 15, 15, 0.6);
 `
 
+// Login Button
 const Button = styled.button`
   background: linear-gradient(45deg, #6a5acd, #ff1493);
-  color: #ffffff;
+  color:rgb(0, 0, 0);
   border: none;
   border-radius: 8px;
-  padding: 0.6rem;
-  font-size: 0.9rem;
+  padding: 0.75rem;
+  font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s ease;
+  text-transform: uppercase;
 
   &:hover {
     transform: translateY(-2px);
@@ -185,6 +198,7 @@ const Button = styled.button`
   }
 `
 
+// Success & Error Messages
 const Message = styled.p`
   text-align: center;
   margin-top: 1rem;
@@ -192,6 +206,7 @@ const Message = styled.p`
   font-size: 0.9rem;
 `
 
+// Logo
 const LogoContainer = styled.div`
   display: flex;
   justify-content: center;
