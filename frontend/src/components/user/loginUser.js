@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Headphones, Mail, Lock } from "lucide-react"
 import styled, { keyframes } from "styled-components"
 import { login } from "../../api/user"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -85,6 +85,11 @@ const Login = () => {
         </Form>
         {message && <Message>{message}</Message>}
         {error && <Message isError>{error}</Message>}
+
+        {/* Sign Up Link */}
+        <SignupLink>
+          Don't have an account? <Link to="/signup">Sign Up</Link>
+        </SignupLink>
       </FormContainer>
     </Container>
   )
@@ -105,17 +110,21 @@ const Container = styled.div`
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background-image: url("/image2.jpg") ;
+  background-image: url("/image2.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  color:rgb(0, 0, 0);
+  color: rgb(0, 0, 0);
   font-family: 'Inter', sans-serif;
   box-sizing: border-box;
-  padding: 20px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 2rem;
 `
 
-// Glassmorphic Form Container with Border Box
+// Glassmorphic Form Container
 const FormContainer = styled.div`
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(15px);
@@ -133,7 +142,7 @@ const Title = styled.h2`
   font-size: 2rem;
   margin-bottom: 1.25rem;
   text-align: center;
-  color:rgb(4, 1, 1);
+  color: rgb(4, 1, 1);
 `
 
 // Form
@@ -155,7 +164,7 @@ const Input = styled.input`
   background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
-  color:rgb(13, 4, 4);
+  color: rgb(13, 4, 4);
   font-size: 0.9rem;
   transition: all 0.3s ease;
   box-sizing: border-box;
@@ -182,7 +191,7 @@ const InputIcon = styled.span`
 // Login Button
 const Button = styled.button`
   background: linear-gradient(45deg, #6a5acd, #ff1493);
-  color:rgb(0, 0, 0);
+  color: rgb(0, 0, 0);
   border: none;
   border-radius: 8px;
   padding: 0.75rem;
@@ -204,6 +213,25 @@ const Message = styled.p`
   margin-top: 1rem;
   color: ${(props) => (props.isError ? "#ff6b6b" : "#4cd964")};
   font-size: 0.9rem;
+`
+
+// Signup Link
+const SignupLink = styled.p`
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: rgba(0, 0, 0, 0.7);
+
+  a {
+    color: #6a5acd;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s ease;
+
+    &:hover {
+      color: #ff1493;
+    }
+  }
 `
 
 // Logo
