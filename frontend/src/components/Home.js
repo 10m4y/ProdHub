@@ -10,16 +10,10 @@ gsap.registerPlugin(ScrollTrigger);
 
 // Import Google Font using Global Styles
 const GlobalStyle = createGlobalStyle`
-@import url('https://fonts.googleapis.com/css2?family=Honk&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Sigmar&display=swap');
 
   body {
-     font-family: "Honk", system-ui;
-  font-optical-sizing: auto;
-  font-weight: 400;
-  font-style: normal;
-  font-variation-settings:
-    "MORF" 15,
-    "SHLN" 50;
+    font-family: 'Sigmar', cursive;
   }
 `;
 
