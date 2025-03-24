@@ -53,7 +53,7 @@ const Login = () => {
         <LogoContainer>
           <Logo />
         </LogoContainer>
-        <Title>Login to ProHub</Title>
+        <Title>Login to ProdHub</Title>
         <Form onSubmit={handleSubmit}>
           <InputGroup>
             <InputIcon>

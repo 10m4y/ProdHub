@@ -1,32 +1,48 @@
+// config/firebase.go
 package config
 
 import (
 	"context"
 	"fmt"
-	"os"
-	"firebase.google.com/go"
-	"firebase.google.com/go/storage"
-	"google.golang.org/api/option"
 	"log"
+	"os"
+
+	firebase "firebase.google.com/go"
+	"cloud.google.com/go/storage"
+	"google.golang.org/api/option"
+	"github.com/joho/godotenv"
 )
 
 var (
-	FirebaseApp   *firebase.App
-	StorageClient *storage.Client
+	FirebaseApp  *firebase.App
+	StorageClient *storage.BucketHandle
+	BucketName string
 )
+func loadEnv() error {
+	if err :=godotenv.Load(); err !=nil{
+		return err
+	}
+	credsPath := os.Getenv("CRED_PATH")
+	if credsPath == "" {
+		return fmt.Errorf("CRED_PATH is not set in the environment variables")
+	}
 
-// InitFirebase initializes the Firebase app and storage client
+	return nil
+}
+
+// InitFirebase initializes the Firebase app and storage bucket
 func InitFirebase() error {
 	ctx := context.Background()
-	
+
 	// Using absolute path for credentials
-	credsPath := "D:\\Projects\\ProdHub\\backend\\prodhub-a4d9c-firebase-adminsdk-wwumf-9975dd04be.json"
-	
-	// Verify credentials file exists
-	if _, err := os.Stat(credsPath); err != nil {
-		return fmt.Errorf("firebase credentials file not found: %v", err)
+	if err:= loadEnv(); err !=nil{
+		panic(fmt.Sprintf("Error loading .env file: %s", err))
 	}
-	
+	credsPath := os.Getenv("CRED_PATH")
+	BucketName = os.Getenv("BUCKET_NAME")
+	log.Println("Creds path:", credsPath)
+	log.Println("Bucket name:", BucketName)
+
 	opt := option.WithCredentialsFile(credsPath)
 
 	// Initialize Firebase app
@@ -41,10 +57,16 @@ func InitFirebase() error {
 	if err != nil {
 		return fmt.Errorf("error initializing storage client: %v", err)
 	}
-	StorageClient = client
-
-	log.Println("Firebase initialized successfully")
 
 
+	// Get bucket handle - Bucket() returns (BucketHandle, error)
+	bucket, err := client.Bucket(BucketName)
+	if err != nil {
+		return fmt.Errorf("error getting bucket handle: %v", err)
+	}
+	StorageClient = bucket
+	
+
+	log.Println("Firebase initialized successfully with bucket:", BucketName)
 	return nil
 }

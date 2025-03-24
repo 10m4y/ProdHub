@@ -64,7 +64,7 @@ const Home = () => {
                                                         animate={{ y: 0, opacity: 1 }}
                                                         transition={{ duration: 1, delay: 0.6 }}
                                                 >
-                                                        <StyledLink to="/signup">Get Started</StyledLink>
+                                                        <StyledLink to="/repos">Get Started</StyledLink>
                                                         <StyledLink to="/signin" secondary>Login</StyledLink>
                                                 </motion.div>
                                         </Content>

@@ -26,7 +26,7 @@ const SignUp = () => {
       setMessage("Welcome to ProHub! Your account has been created.");
       setError("");
       setTimeout(() => {
-        navigate("/login");
+        navigate("/signin");
       }, 1000);
     } catch (err) {
       setError(err.response?.data?.error || "Failed to create account. Please try again.");
@@ -40,7 +40,7 @@ const SignUp = () => {
         <LogoContainer>
           <Logo />
         </LogoContainer>
-        <Title>Join ProHub</Title>
+        <Title>Join ProdHub</Title>
         <Form onSubmit={handleSubmit}>
           <InputGroup>
             <InputIcon>

@@ -48,7 +48,7 @@ const RepoList = () => {
         {repos.map((repo) => (
           <Card key={repo.repoId}>
             <StatusBadge isPublic={repo.public}>
-              {repo.public ? <><Globe size={14} /> Public</> : <><Lock size={14} /> Private</>}
+            {repo.Public ? "Public" : "Private"}
             </StatusBadge>
             <RepoName to={`/repo/${repo.RepoID}`}>{repo.Name}</RepoName>
             <MetaInfo><Clock size={16} /> {new Date(repo.UpdatedAt * 1000).toLocaleString()}</MetaInfo>

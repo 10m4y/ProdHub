@@ -14,10 +14,11 @@ func RepoRoutes(router *gin.Engine) {
 	{
 		// Repository Routes
 		repo.GET("/", controllers.GetAllPublicRepos)
-		repo.POST("/create", controllers.CreateRepo)
+		repo.POST("/create", controllers.CreateRepo)	
 		repo.GET("/:id", controllers.GetRepo)
 		repo.PUT("/:id", controllers.UpdateRepo)
 		repo.DELETE("/:id", controllers.DeleteRepo)
+		repo.POST("/upload",controllers.UploadFile)
 
 		// Branch Routes
 		repo.POST("/:id/branch", controllers.CreateBranch)
