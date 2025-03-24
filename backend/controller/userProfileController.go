@@ -178,7 +178,7 @@ func UnlikeRepo(c *gin.Context) {
 	}
 	c.JSON(http.StatusBadRequest, gin.H{"error": "Repo not found in liked list"})
 }
-
+			
 // CreateUser creates a new user
 func CreateUser(c *gin.Context) {
 	var input struct {
@@ -253,7 +253,7 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}
-
+	
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userID": user.UserID,
 		"exp":    time.Now().Add(time.Hour * 24).Unix(),

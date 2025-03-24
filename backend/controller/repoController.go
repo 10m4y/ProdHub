@@ -58,9 +58,11 @@ func sendErrorResponse(c *gin.Context, statusCode int, err error) {
 func CreateRepo(c *gin.Context) {
 	ctx := context.Background()
 	var input RepoInput
+	
 
 	// Extract user_id from the context
-	userID, exists := c.Get("userId")
+	fmt.Println("All context keys:", c.Keys)
+	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
@@ -117,6 +119,7 @@ func CreateRepo(c *gin.Context) {
 			BPM:   input.BPM,
 			Scale: input.Scale,
 			Genre: input.Genre,
+			
 		},
 		Activity: []mongo.Activity{
 			{
@@ -136,6 +139,7 @@ func CreateRepo(c *gin.Context) {
 		},
 		CreatedAt: now,
 		UpdatedAt: now,
+		Public:    true,
 	}
 
 	// Insert repo into MongoDB
@@ -222,8 +226,8 @@ func AddVersion(c *gin.Context) {
 	defer file.Close()
 
 	//UPLOAD FILE TO FIREBASE STORAGE
-	bucketName := "prodhub-a4d9c.appspot.com"
-	fileURL, err := UploadFile(file, header.Filename, bucketName)
+
+	fileURL, err := UploadFileUtil(file, header.Filename)
 if err != nil {
     log.Printf("Upload failed: %v", err)
     c.JSON(http.StatusInternalServerError, gin.H{

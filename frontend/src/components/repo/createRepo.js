@@ -69,7 +69,9 @@ const Button = styled.button`
 const CreateRepo = () => {
   const [formData, setFormData] = useState({ name: '', bpm: '', scale: '', genre: '' });
   const navigate = useNavigate();
-
+  const preprocessFormData = () => {
+    return { ...formData, bpm: parseInt(formData.bpm, 10) };
+  };
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -77,6 +79,7 @@ const CreateRepo = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const formData = preprocessFormData();
       await createRepo(formData);
       alert('Repo created successfully');
       navigate('/repo');

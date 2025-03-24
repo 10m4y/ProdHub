@@ -186,7 +186,16 @@ const RepoDetails = () => {
 
       <Section>
         <Label>Project Info</Label>
-        <MetaData><Label>Branches:</Label> {repo.Branches || "None"}</MetaData>
+        <MetaData><Label>Branches:</Label> {repo && repo.Branches && repo.Branches.length > 0?(
+          <List>
+            {repo.Branches.map((branch, index) => (
+              <ListItem key={index}>{branch.name}</ListItem>
+            ))}
+          </List>
+
+        ):(
+          <MetaData>No branches available</MetaData>
+        )}</MetaData>
         <MetaData><Label>Created:</Label> {new Date(repo.CreatedAt * 1000).toLocaleString()}</MetaData>
         <MetaData><Label>Last Updated:</Label> {repo.UpdatedAt ? new Date(repo.UpdatedAt * 1000).toLocaleString() : "Never"}</MetaData>
         <MetaData>
