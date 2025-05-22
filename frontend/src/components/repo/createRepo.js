@@ -68,13 +68,20 @@ const Button = styled.button`
 
 const CreateRepo = () => {
   const [formData, setFormData] = useState({ name: '', bpm: '', scale: '', genre: '' });
+  const [selectedAppearance,setSelectedAppearance]=useState("true");
   const navigate = useNavigate();
   const preprocessFormData = () => {
-    return { ...formData, bpm: parseInt(formData.bpm, 10) };
+  return {
+    ...formData,
+    bpm: parseInt(formData.bpm, 10),
+    public: selectedAppearance === "true" // converts string to boolean
   };
+};
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+  const handleRadioChange=(value)=>{setSelectedAppearance(value);}
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -96,6 +103,29 @@ const CreateRepo = () => {
         <Input name="bpm" placeholder="BPM" onChange={handleChange} required />
         <Input name="scale" placeholder="Scale" onChange={handleChange} required />
         <Input name="genre" placeholder="Genre" onChange={handleChange} required />
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+  <label>
+    <input
+      type="radio"
+      name="appearance"
+      value="true"
+      checked={selectedAppearance === "true"}
+      onChange={() => handleRadioChange("true")}
+    />
+    Public
+  </label>
+  <label>
+    <input
+      type="radio"
+      name="appearance"
+      value="false"
+      checked={selectedAppearance === "false"}
+      onChange={() => handleRadioChange("false")}
+    />
+    Private
+  </label>
+</div>
+
         <Button type="submit">Create Repo</Button>
       </Form>
     </FormContainer>

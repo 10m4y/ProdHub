@@ -17,9 +17,10 @@ API.interceptors.request.use((config) => {
     return Promise.reject(error);
 });
 
-export const createRepo = (data) => API.post('/create', data); 
+export const createRepo = (data) => API.post('/create', data);  //working
+export const updateRepo =(id,data) => API.put(`${id}`,data)
 export const getRepo = (id) => API.get(`/${id}`);//working
-export const deleteRepo = (id) => API.delete(`/${id}`);
+export const deleteRepo = (id) => API.delete(`/${id}`);//working
 export const addVersion = (id, formData) => API.post(`/upload/${id}`, formData);
 export const getRepoVersions = (id) => API.get(`/history/${id}`);
 export const getAllRepos = () => API.get('/');//working

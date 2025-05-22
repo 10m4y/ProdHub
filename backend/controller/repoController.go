@@ -22,10 +22,11 @@ import (
 // Structs for Inputs
 type RepoInput struct {
 	// OwnerID     string `json:"owner_id" binding:"required"`
-	Name        string `json:"name" binding:"required,min=1,max=100"`
-	BPM         int    `json:"bpm" binding:"required,min=20,max=300"`
-	Scale       string `json:"scale" binding:"required"`
-	Genre       string `json:"genre" binding:"required"`
+	Name   string `json:"name" binding:"required,min=1,max=100"`
+	BPM    int    `json:"bpm" binding:"required,min=20,max=300"`
+	Scale  string `json:"scale" binding:"required"`
+	Genre  string `json:"genre" binding:"required"`
+	Public bool   `json:"public" default:"true"`
 }
 
 type UpdateRepoInput struct {
@@ -33,6 +34,7 @@ type UpdateRepoInput struct {
 	BPM   *int    `json:"bpm" binding:"omitempty,min=20,max=300"`
 	Scale *string `json:"scale"`
 	Genre *string `json:"genre"`
+	Public bool   `json:"public"`
 }
 
 type BranchInput struct {
@@ -139,7 +141,7 @@ func CreateRepo(c *gin.Context) {
 		},
 		CreatedAt: now,
 		UpdatedAt: now,
-		Public:    true,
+		Public:    input.Public,
 	}
 
 	// Insert repo into MongoDB
@@ -203,6 +205,12 @@ func UpdateRepo(c *gin.Context) {
 	if input.Genre != nil {
 		updateData["description.genre"] = *input.Genre
 	}
+	
+	if input.Public {
+		updateData["public"] = input.Public
+	}
+
+	
 
 	filter := bson.M{"repoId": repoID}
 	update := bson.M{"$set": updateData}

@@ -129,6 +129,9 @@ const RepoDetails = () => {
       alert('Error deleting repo');
     }
   };
+  const handdleUpdate=async ()=>{
+    navigate(`/repo/${id}/update`)
+  }
 
   return repo ? (
     <Container>
@@ -204,6 +207,7 @@ const RepoDetails = () => {
       </Section>
 
       <DeleteButton onClick={handleDelete}>Delete Project</DeleteButton>
+      <DeleteButton onClick={handdleUpdate}>Edit Repo</DeleteButton>
     </Container>
   ) : (
     <Container>
