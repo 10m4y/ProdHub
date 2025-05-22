@@ -27,7 +27,7 @@ func main() {
         log.Fatalf("Failed to initialize Firebase: %v", err)
     }
 
-	// CONNECTING MONGODB
+	// // CONNECTING MONGODB
 	log.Println("Connecting to mongodb")
 	config.ConnectMongo()
 

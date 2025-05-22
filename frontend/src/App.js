@@ -6,6 +6,7 @@ import Lenis from "@studio-freight/lenis";
 
 // Importing Components
 import CreateRepo from "./components/repo/createRepo";
+import UpdateRepo from "./components/repo/updateRepo";
 import RepoDetails from "./components/repo/repoDetails";
 import RepoHistory from "./components/repo/repoHistory";
 import UploadVersion from "./components/repo/uploadVersion";
@@ -18,78 +19,78 @@ import GetUserRepos from "./components/user/getUserRepos";
 import Home from "./components/Home";
 
 // Register GSAP Plugin
-gsap.registerPlugin(ScrollTrigger);
+// gsap.registerPlugin(ScrollTrigger);
 
-// Smooth Scrolling Function
-const SmoothScroll = () => {
-  useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.5,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-    });
+// // Smooth Scrolling Function
+// const SmoothScroll = () => {
+//   useEffect(() => {
+//     const lenis = new Lenis({
+//       duration: 1.5,
+//       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+//     });
 
-    function raf(time) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
+//     function raf(time) {
+//       lenis.raf(time);
+//       requestAnimationFrame(raf);
+//     }
 
-    requestAnimationFrame(raf);
+//     requestAnimationFrame(raf);
 
-    return () => lenis.destroy();
-  }, []);
+//     return () => lenis.destroy();
+//   }, []);
 
-  return null;
-};
+//   return null;
+// };
 
-// Scroll Animations Function
-const ScrollAnimations = () => {
-  useEffect(() => {
-    gsap.from(".fade-in", {
-      opacity: 0,
-      y: 50,
-      duration: 1.2,
-      stagger: 0.3,
-      scrollTrigger: {
-        trigger: ".fade-in",
-        start: "top 80%",
-        end: "bottom 50%",
-        scrub: 1,
-      },
-    });
+// // Scroll Animations Function
+// const ScrollAnimations = () => {
+//   useEffect(() => {
+//     gsap.from(".fade-in", {
+//       opacity: 0,
+//       y: 50,
+//       duration: 1.2,
+//       stagger: 0.3,
+//       scrollTrigger: {
+//         trigger: ".fade-in",
+//         start: "top 80%",
+//         end: "bottom 50%",
+//         scrub: 1,
+//       },
+//     });
 
-    gsap.from(".slide-left", {
-      opacity: 0,
-      x: -100,
-      duration: 1.5,
-      scrollTrigger: {
-        trigger: ".slide-left",
-        start: "top 85%",
-        end: "bottom 60%",
-        scrub: 1,
-      },
-    });
+//     gsap.from(".slide-left", {
+//       opacity: 0,
+//       x: -100,
+//       duration: 1.5,
+//       scrollTrigger: {
+//         trigger: ".slide-left",
+//         start: "top 85%",
+//         end: "bottom 60%",
+//         scrub: 1,
+//       },
+//     });
 
-    gsap.from(".slide-right", {
-      opacity: 0,
-      x: 100,
-      duration: 1.5,
-      scrollTrigger: {
-        trigger: ".slide-right",
-        start: "top 85%",
-        end: "bottom 60%",
-        scrub: 1,
-      },
-    });
-  }, []);
+//     gsap.from(".slide-right", {
+//       opacity: 0,
+//       x: 100,
+//       duration: 1.5,
+//       scrollTrigger: {
+//         trigger: ".slide-right",
+//         start: "top 85%",
+//         end: "bottom 60%",
+//         scrub: 1,
+//       },
+//     });
+//   }, []);
 
-  return null;
-};
+//   return null;
+// };
 
 const App = () => {
   return (
     <>
-      <SmoothScroll />
-      <ScrollAnimations />
+      {/* <SmoothScroll />
+      <ScrollAnimations /> */}
 
       <Router>
         <div style={styles.container}>
@@ -98,6 +99,7 @@ const App = () => {
             <Route path="/" element={<Home />} />
             <Route path="/repos" element={<RepoList />} />
             <Route path="/create" element={<CreateRepo />} />
+            <Route path="/repo/:id/update" element={<UpdateRepo/>}/>
             <Route path="/repo/:id" element={<RepoDetails />} />
             <Route path="/repo/:id/history" element={<RepoHistory />} />
             <Route path="/repo/:id/upload" element={<UploadVersion />} />
